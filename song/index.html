@@ -147,16 +147,16 @@
         /* --- 专场卡片网格 --- */
         .theme-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
             padding: 0 16px;
         }
         .theme-card {
             background: var(--surface);
             backdrop-filter: blur(12px);
             border: 1px solid var(--border);
-            border-radius: 18px;
-            padding: 22px 14px 20px;
+            border-radius: 16px;
+            padding: 16px 8px 14px;
             text-align: center;
             cursor: pointer;
             transition: transform .2s, box-shadow .2s, border-color .2s;
@@ -180,11 +180,11 @@
         }
         .theme-card:active { transform: scale(.97); }
 
-        .theme-card-icon  { font-size: 38px; margin-bottom: 10px; display: block;
+        .theme-card-icon  { font-size: 30px; margin-bottom: 8px; display: block;
                             filter: drop-shadow(0 4px 8px rgba(124,58,237,.25)); }
-        .theme-card-name  { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 5px;
+        .theme-card-name  { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px;
                             letter-spacing: .5px; }
-        .theme-card-desc  { font-size: 11px; color: var(--text-dim); margin-bottom: 8px; }
+        .theme-card-desc  { font-size: 10px; color: var(--text-dim); margin-bottom: 6px; }
         .theme-card-count {
             display: inline-block;
             font-size: 10px;
