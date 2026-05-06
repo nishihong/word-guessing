@@ -434,28 +434,7 @@
         <div class="theme-hero-title">猜歌词游戏</div>
         <div class="theme-hero-sub">选择你的专场，开始挑战</div>
     </div>
-    <div class="theme-grid">
-        <div class="theme-card" onclick="selectTheme('jay')">
-            <div class="theme-card-icon">🎵</div>
-            <div class="theme-card-name">周杰伦专场</div>
-            <div class="theme-card-desc">华语天王·经典金曲</div>
-        </div>
-        <div class="theme-card" onclick="selectTheme('80s')">
-            <div class="theme-card-icon">🎸</div>
-            <div class="theme-card-name">80后专场</div>
-            <div class="theme-card-desc">经典老歌·回忆杀</div>
-        </div>
-        <div class="theme-card" onclick="selectTheme('90s')">
-            <div class="theme-card-icon">🌟</div>
-            <div class="theme-card-name">90后专场</div>
-            <div class="theme-card-desc">青春旋律·时代之声</div>
-        </div>
-        <div class="theme-card" onclick="selectTheme('love')">
-            <div class="theme-card-icon">💕</div>
-            <div class="theme-card-name">情歌对唱</div>
-            <div class="theme-card-desc">甜蜜对唱·爱情金曲</div>
-        </div>
-    </div>
+    <div class="theme-grid" id="themeGrid"></div>
 </div>
 
 <!-- ========== 游戏页 ========== -->
@@ -509,6 +488,9 @@
     <div class="footer-tip">输入字符揭示歌词与歌名 — 歌名全部揭示即获胜</div>
 </div>
 
+<!-- 歌曲数据 -->
+<script src="songs-data.js"></script>
+
 <!-- 提示条 -->
 <div class="toast" id="toast"></div>
 
@@ -538,47 +520,38 @@
 </div>
 
 <script>
-/* ========== 专场配置 ========== */
-const THEMES = [
-    { id: 'jay',  name: '周杰伦专场', icon: '🎵' },
-    { id: '80s',  name: '80后专场',   icon: '🎸' },
-    { id: '90s',  name: '90后专场',   icon: '🌟' },
-    { id: 'love', name: '情歌对唱',   icon: '💕' },
-];
-
-/* ========== 本地占位歌曲（对接接口后可删除） ========== */
-const THEME_SONGS = {
-    jay: [
-        { name: "示例歌曲A", artist: "周杰伦", lyrics: ["这里放真实歌词第一行", "第二行歌词内容", "第三行歌词内容", "第四行歌词内容"] },
-        { name: "示例歌曲B", artist: "周杰伦", lyrics: ["这里放真实歌词第一行", "第二行歌词内容", "第三行歌词内容", "第四行歌词内容"] },
-    ],
-    '80s': [
-        { name: "示例歌曲C", artist: "邓丽君", lyrics: ["这里放真实歌词第一行", "第二行歌词内容", "第三行歌词内容", "第四行歌词内容"] },
-        { name: "示例歌曲D", artist: "张国荣", lyrics: ["这里放真实歌词第一行", "第二行歌词内容", "第三行歌词内容", "第四行歌词内容"] },
-    ],
-    '90s': [
-        { name: "示例歌曲E", artist: "王菲",   lyrics: ["这里放真实歌词第一行", "第二行歌词内容", "第三行歌词内容", "第四行歌词内容"] },
-        { name: "示例歌曲F", artist: "刘德华", lyrics: ["这里放真实歌词第一行", "第二行歌词内容", "第三行歌词内容", "第四行歌词内容"] },
-    ],
-    love: [
-        { name: "示例歌曲G", artist: "男歌手 / 女歌手", lyrics: ["这里放真实歌词第一行", "第二行歌词内容", "第三行歌词内容", "第四行歌词内容"] },
-        { name: "示例歌曲H", artist: "对唱组合",         lyrics: ["这里放真实歌词第一行", "第二行歌词内容", "第三行歌词内容", "第四行歌词内容"] },
-    ],
-};
 
 /* ========== 初始预揭示的高频字 ========== */
-const PRE_REVEAL = new Set(['的', '了', '是', '在', '着']);
+const PRE_REVEAL = new Set(['的', '了', '是', '在', '着', '你', '我', '他']);
 
 /* ========== 游戏状态 ========== */
-let currentTheme   = null;   // 当前专场 id
-let currentSong    = null;   // 当前歌曲对象
-let usedSongNames  = {};     // 记录各专场已出现歌曲，避免重复
+let currentTheme   = null;
+let currentSong    = null;
+let usedSongNames  = {};
 let guessCount     = 0;
 let startTime      = 0;
 let states         = [];
 let songNameStates = [];
 let artistStates   = [];
 let guessedSet     = new Set();
+
+/* ========== 动态渲染主题卡片 ========== */
+(function renderThemeGrid() {
+    const grid = document.getElementById('themeGrid');
+    THEMES.forEach(t => {
+        const count = (THEME_SONGS[t.id] || []).length;
+        const card = document.createElement('div');
+        card.className = 'theme-card';
+        card.setAttribute('onclick', `selectTheme('${t.id}')`);
+        card.innerHTML = `
+            <div class="theme-card-icon">${t.icon}</div>
+            <div class="theme-card-name">${t.name}</div>
+            <div class="theme-card-desc">${t.desc}</div>
+            <div class="theme-card-count">${count} 首歌曲</div>
+        `;
+        grid.appendChild(card);
+    });
+})();
 
 /* ========== 接口层（对接真实接口只需改这一个函数） ========== */
 async function fetchSong(themeId) {
