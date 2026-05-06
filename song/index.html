@@ -642,6 +642,33 @@
             transition: border-color .15s, background .15s;
         }
         .back-theme-btn:hover { background: rgba(124,58,237,.08); border-color: var(--purple); }
+
+        /* 关闭弹窗按钮 */
+        .win-close {
+            position: absolute;
+            top: 12px;
+            right: 14px;
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: rgba(124,58,237,.08);
+            border-radius: 50%;
+            color: var(--text-dim);
+            font-size: 16px;
+            line-height: 28px;
+            text-align: center;
+            cursor: pointer;
+            transition: background .15s, color .15s;
+            z-index: 1;
+        }
+        .win-close:hover { background: rgba(124,58,237,.18); color: var(--purple); }
+        .win-peek-hint {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 12px;
+            position: relative;
+            opacity: .75;
+        }
     </style>
 </head>
 <body>
@@ -715,6 +742,7 @@
 <!-- 胜利弹窗 -->
 <div class="overlay" id="overlay">
     <div class="win-box">
+        <button class="win-close" onclick="closeOverlay()" title="关闭查看歌词">×</button>
         <span class="win-emoji">🎉</span>
         <div class="win-title">SONG GUESSED!</div>
         <div class="win-song" id="wSong"></div>
@@ -734,6 +762,7 @@
             <button class="back-theme-btn" onclick="goHome()">换专场</button>
             <button class="next-btn" onclick="nextSong()">再来一首 →</button>
         </div>
+        <div class="win-peek-hint">× 关闭可查看完整歌词提示</div>
     </div>
 </div>
 
@@ -1051,6 +1080,11 @@ function triggerWin() {
 function nextSong() {
     document.getElementById('overlay').classList.remove('show');
     startNewSong();
+}
+
+/* ---- 关闭弹窗（留在当前页查看歌词提示） ---- */
+function closeOverlay() {
+    document.getElementById('overlay').classList.remove('show');
 }
 
 /* ---- Toast ---- */
