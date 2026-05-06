@@ -3,337 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>猜歌游戏</title>
+    <title>猜歌词 · MUSIC QUIZ</title>
     <style>
-        /* ===== 小清新配色变量 ===== */
+        /* ===== 设计令牌 · 明亮活力风 ===== */
         :root {
-            --bg-from:    #f0faf5;
-            --bg-mid:     #e6f4fb;
-            --bg-to:      #f5effe;
-            --accent:     #3aaa7e;   /* 薄荷绿（加深） */
-            --accent-dk:  #278060;
-            --accent-lt:  #c2e8d8;
-            --surface:    rgba(255,255,255,0.90);
-            --border:     #a8d8c4;
-            --text-h:     #0f2e22;   /* 极深绿，标题 */
-            --text-b:     #1e4535;   /* 深绿，正文 */
-            --text-s:     #3a6e58;   /* 中深绿，次要 */
-            --text-m:     #5a8c78;   /* 较深，辅助 */
-            --hidden-bg:  #b8d9ee;   /* 天蓝遮块（稍深） */
-            --pre-color:  #1a4a38;   /* 预显字 */
-            --rev-color:  #1a7a52;   /* 命中字 */
-            --shadow:     0 2px 12px rgba(40,120,80,0.15);
+            --bg:        #f4f0ff;
+            --bg2:       #eef6ff;
+            --surface:   rgba(255,255,255,0.72);
+            --border:    rgba(120,90,220,0.15);
+            --cyan:      #06b6d4;
+            --purple:    #7c3aed;
+            --pink:      #ec4899;
+            --gold:      #f59e0b;
+            --text:      #1e1b4b;
+            --text-dim:  #6b7280;
+            --hit-bg:    rgba(124,58,237,0.10);
+            --hit-color: #7c3aed;
+            --hidden-bg: rgba(124,58,237,0.12);
+            --pre-color: rgba(30,27,75,0.45);
+            --glow-c:    0 0 14px rgba(6,182,212,0.35);
+            --glow-p:    0 0 14px rgba(124,58,237,0.35);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin:0; padding:0; box-sizing:border-box; }
 
         body {
-            background: linear-gradient(160deg, var(--bg-from) 0%, var(--bg-mid) 45%, var(--bg-to) 100%);
-            background-attachment: fixed;
-            color: var(--text-b);
-            font-family: 'PingFang SC', 'Microsoft YaHei', '微软雅黑', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'PingFang SC','Microsoft YaHei','微软雅黑',sans-serif;
             min-height: 100vh;
             max-width: 500px;
             margin: 0 auto;
+            overflow-x: hidden;
         }
 
-        /* ---- 顶部标题 ---- */
-        .header {
-            background: var(--surface);
-            backdrop-filter: blur(8px);
-            border-bottom: 1px solid var(--border);
-            padding: 10px 14px 0;
-            box-shadow: var(--shadow);
-        }
-        .breadcrumb {
-            font-size: 11px;
-            color: var(--text-m);
-            letter-spacing: 0.5px;
-        }
-        .divider {
-            height: 1px;
-            background: var(--border);
-            margin: 8px 0 0;
-        }
-
-        /* ---- 猜测次数 ---- */
-        .guess-count-bar {
-            text-align: center;
-            font-size: 13px;
-            color: var(--text-s);
-            padding: 7px 0;
-            border-bottom: 1px solid var(--border);
-            background: rgba(255,255,255,0.5);
-        }
-        .guess-count-bar span {
-            color: var(--accent-dk);
-            font-weight: bold;
-        }
-
-        /* ---- 输入区 ---- */
-        .input-row {
-            display: flex;
-            gap: 8px;
-            padding: 12px 14px;
-            align-items: center;
-            background: rgba(255,255,255,0.4);
-        }
-        .guess-input {
-            flex: 1;
-            height: 40px;
-            padding: 0 14px;
-            border: 1.5px solid var(--border);
-            border-radius: 20px;
-            background: #fff;
-            color: var(--text-h);
-            font-size: 15px;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            box-shadow: 0 1px 4px rgba(80,160,120,0.08);
-        }
-        .guess-input::placeholder { color: var(--text-m); }
-        .guess-input:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(109,191,158,0.18);
-        }
-        .guess-input.shake { animation: shake 0.35s; }
-        @keyframes shake {
-            0%,100% { transform: translateX(0); }
-            20%      { transform: translateX(-7px); }
-            40%      { transform: translateX(7px); }
-            60%      { transform: translateX(-4px); }
-            80%      { transform: translateX(4px); }
-        }
-        .submit-btn {
-            height: 40px;
-            padding: 0 18px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-dk));
-            color: #fff;
-            border: none;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            white-space: nowrap;
-            box-shadow: 0 2px 8px rgba(77,168,128,0.3);
-            transition: opacity 0.15s;
-        }
-        .submit-btn:active { opacity: 0.85; }
-
-        /* ---- 歌曲信息 ---- */
-        .song-section {
-            padding: 8px 14px 10px;
-            position: relative;
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-        }
-        .look-btn {
-            position: absolute;
-            right: 14px;
-            top: 10px;
-            background: linear-gradient(135deg, #a8d8c0, var(--accent));
-            border: none;
-            border-radius: 14px;
-            color: #fff;
-            padding: 5px 13px;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            letter-spacing: 0.5px;
-            box-shadow: 0 1px 6px rgba(109,191,158,0.3);
-        }
-        .look-btn:active { opacity: 0.8; }
-        .song-meta-line {
-            font-size: 13px;
-            color: var(--text-b);
-            line-height: 2.2;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            flex-wrap: wrap;
-        }
-        .meta-label { color: var(--text-s); font-size: 12px; }
-
-        /* 歌名/歌手区字符块 */
-        .meta-ch {
-            width: 18px;
-            height: 18px;
-            font-size: 13px;
-            vertical-align: middle;
-            margin: 1px;
-            border-radius: 3px;
-        }
-        .meta-sep {
-            color: var(--text-m);
-            font-size: 13px;
-            vertical-align: middle;
-            margin: 0 2px;
-        }
-
-        /* ---- 进度条 ---- */
-        .progress-wrap {
-            padding: 6px 14px 2px;
-            background: rgba(255,255,255,0.3);
-        }
-        .progress-bg {
-            height: 4px;
-            background: var(--accent-lt);
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        .progress-fg {
-            height: 100%;
-            background: linear-gradient(to right, #a8e6c8, var(--accent));
-            border-radius: 4px;
-            transition: width 0.5s ease;
-        }
-        .progress-text {
-            font-size: 11px;
-            color: var(--text-s);
-            text-align: right;
-            padding: 2px 0 4px;
-        }
-
-        /* ---- 歌词展示区 ---- */
-        .lyrics-area {
-            padding: 8px 14px 36px;
-        }
-        .lyric-line {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 3px;
-            margin: 5px 0;
-            min-height: 28px;
-        }
-        .ch {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 23px;
-            height: 23px;
-            font-size: 14px;
-            border-radius: 4px;
-            font-weight: 500;
-            transition: background 0.3s, color 0.3s;
-        }
-        .ch.hidden   { background: var(--hidden-bg); }
-        .ch.pre      { background: transparent; color: var(--pre-color); font-weight: 600; }
-        .ch.revealed { background: var(--accent-lt); color: var(--rev-color); font-weight: 800; }
-        .ch.space    { background: transparent; width: 6px; }
-
-        /* ---- 消息提示条 ---- */
-        .toast {
-            position: fixed;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 9px 22px;
-            border-radius: 0 0 12px 12px;
-            font-size: 13px;
-            font-weight: bold;
-            z-index: 500;
-            display: none;
-            max-width: 88vw;
-            text-align: center;
-            white-space: normal;
-            word-break: break-all;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.1);
-        }
-        .toast.ok  { background: #b7ecd4; color: #2a7a55; }
-        .toast.err { background: #fddcdc; color: #c05050; }
-        .toast.tip { background: #d4e8fb; color: #3a70b0; }
-
-        /* ---- 胜利弹窗 ---- */
-        .overlay {
-            display: none;
+        /* ===== 动态背景 · 彩色光斑 ===== */
+        body::before {
+            content: '';
             position: fixed;
             inset: 0;
-            background: rgba(200,235,220,0.55);
-            backdrop-filter: blur(6px);
-            z-index: 400;
-            align-items: center;
-            justify-content: center;
+            background:
+                radial-gradient(ellipse 55% 40% at 15% 5%,  rgba(124,58,237,.18) 0%, transparent 70%),
+                radial-gradient(ellipse 50% 40% at 85% 85%, rgba(6,182,212,.16)  0%, transparent 70%),
+                radial-gradient(ellipse 45% 35% at 55% 40%, rgba(236,72,153,.12) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 50% at 50% 90%, rgba(245,158,11,.10) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+            animation: bgPulse 8s ease-in-out infinite alternate;
         }
-        .overlay.show { display: flex; }
-        .win-box {
-            background: #fff;
-            border: 2px solid var(--accent-lt);
-            border-radius: 20px;
-            padding: 32px 36px 28px;
-            text-align: center;
-            max-width: 310px;
-            width: 88%;
-            animation: popIn 0.3s;
-            box-shadow: 0 8px 32px rgba(80,160,120,0.18);
-        }
-        @keyframes popIn {
-            from { transform: scale(0.82); opacity: 0; }
-            to   { transform: scale(1);   opacity: 1; }
-        }
-        .win-emoji { font-size: 46px; margin-bottom: 10px; }
-        .win-title { font-size: 22px; color: var(--accent-dk); font-weight: bold; margin-bottom: 4px; }
-        .win-song  { font-size: 19px; color: var(--text-h); font-weight: bold; margin: 8px 0 2px; }
-        .win-info  { font-size: 13px; color: var(--text-s); margin: 4px 0; }        .win-stats {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 18px 0 22px;
-            background: var(--accent-lt);
-            border-radius: 12px;
-            padding: 14px 0;
-        }
-        .win-stat-item { flex: 1; text-align: center; }
-        .win-stat-divider { width: 1px; height: 36px; background: #b7e0cc; }
-        .stat-num   { font-size: 28px; font-weight: bold; color: var(--accent-dk); line-height: 1.2; }
-        .stat-label { font-size: 11px; color: var(--text-s); margin-top: 4px; }
-        .next-btn {
-            padding: 11px 34px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-dk));
-            color: #fff;
-            border: none;
-            border-radius: 20px;
-            font-size: 15px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 3px 10px rgba(77,168,128,0.3);
-            transition: opacity 0.15s;
-        }
-        .next-btn:active { opacity: 0.85; }
-
-        /* ---- 底部信息 ---- */
-        .footer-tip {
-            text-align: center;
-            font-size: 11px;
-            color: var(--text-m);
-            padding: 0 14px 20px;
+        @keyframes bgPulse {
+            from { opacity: .6; }
+            to   { opacity: 1; }
         }
 
-        /* ======== 主题选择页 ======== */
+        /* 纹理 */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='.6' fill='rgba(124,58,237,.06)'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ===== 通用层级 ===== */
+        #themeScreen, #gameScreen, .toast, .overlay { position: relative; z-index: 1; }
+
+        /* ========================================
+           主题选择页
+        ======================================== */
         #themeScreen {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding: 0 0 30px;
+            padding-bottom: 40px;
         }
         #gameScreen { display: none; }
 
+        /* --- Hero 区 --- */
         .theme-hero {
             text-align: center;
-            padding: 40px 20px 24px;
+            padding: 52px 20px 32px;
         }
-        .theme-hero-icon { font-size: 52px; margin-bottom: 10px; }
+        .hero-logo {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 16px;
+        }
+        .hero-logo-icon {
+            font-size: 64px;
+            display: block;
+            filter: drop-shadow(0 6px 20px rgba(124,58,237,.45));
+            animation: floatIcon 3s ease-in-out infinite;
+        }
+        @keyframes floatIcon {
+            0%,100% { transform: translateY(0); }
+            50%      { transform: translateY(-8px); }
+        }
+        /* 均衡器条 */
+        .eq-bars {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 4px;
+            height: 28px;
+            margin-bottom: 18px;
+        }
+        .eq-bar {
+            width: 4px;
+            border-radius: 2px;
+            background: linear-gradient(to top, var(--cyan), var(--purple));
+            animation: eqAnim 1.2s ease-in-out infinite alternate;
+        }
+        .eq-bar:nth-child(1){ height:40%; animation-delay:0s; }
+        .eq-bar:nth-child(2){ height:70%; animation-delay:.1s; }
+        .eq-bar:nth-child(3){ height:100%;animation-delay:.2s; }
+        .eq-bar:nth-child(4){ height:55%; animation-delay:.15s;}
+        .eq-bar:nth-child(5){ height:85%; animation-delay:.05s;}
+        .eq-bar:nth-child(6){ height:45%; animation-delay:.25s;}
+        .eq-bar:nth-child(7){ height:75%; animation-delay:.1s; }
+        @keyframes eqAnim {
+            from { transform: scaleY(0.3); opacity:.6; }
+            to   { transform: scaleY(1);   opacity:1; }
+        }
+
         .theme-hero-title {
-            font-size: 24px;
-            font-weight: bold;
-            color: var(--text-h);
-            margin-bottom: 6px;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, var(--cyan) 0%, var(--purple) 50%, var(--pink) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            text-transform: uppercase;
         }
         .theme-hero-sub {
             font-size: 13px;
-            color: var(--text-s);
+            color: var(--text-dim);
+            letter-spacing: 1px;
         }
 
+        /* --- 专场卡片网格 --- */
         .theme-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -341,88 +152,496 @@
             padding: 0 16px;
         }
         .theme-card {
-            background: rgba(255,255,255,0.88);
-            border-radius: 16px;
-            padding: 20px 14px 18px;
+            background: var(--surface);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 22px 14px 20px;
             text-align: center;
             cursor: pointer;
-            border: 2px solid transparent;
-            box-shadow: 0 3px 12px rgba(60,120,80,0.10);
-            transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+            transition: transform .2s, box-shadow .2s, border-color .2s;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(124,58,237,.08);
         }
+        .theme-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(124,58,237,.08), rgba(236,72,153,.06));
+            opacity: 0;
+            transition: opacity .2s;
+        }
+        .theme-card:hover::before { opacity: 1; }
         .theme-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(60,120,80,0.18);
-            border-color: var(--accent);
+            transform: translateY(-4px) scale(1.02);
+            border-color: var(--purple);
+            box-shadow: 0 12px 28px rgba(124,58,237,.22), 0 0 0 1px rgba(124,58,237,.15);
         }
-        .theme-card:active { transform: scale(0.97); }
-        .theme-card-icon  { font-size: 36px; margin-bottom: 8px; }
-        .theme-card-name  { font-size: 15px; font-weight: bold; color: var(--text-h); margin-bottom: 4px; }
-        .theme-card-desc  { font-size: 11px; color: var(--text-s); }
-        .theme-card-count { font-size: 10px; color: var(--text-m); margin-top: 6px; }
+        .theme-card:active { transform: scale(.97); }
 
-        /* 游戏页主题标签 */
-        .theme-badge {
-            display: inline-flex;
+        .theme-card-icon  { font-size: 38px; margin-bottom: 10px; display: block;
+                            filter: drop-shadow(0 4px 8px rgba(124,58,237,.25)); }
+        .theme-card-name  { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 5px;
+                            letter-spacing: .5px; }
+        .theme-card-desc  { font-size: 11px; color: var(--text-dim); margin-bottom: 8px; }
+        .theme-card-count {
+            display: inline-block;
+            font-size: 10px;
+            padding: 3px 11px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(124,58,237,.12), rgba(236,72,153,.12));
+            color: var(--purple);
+            border: 1px solid rgba(124,58,237,.25);
+            font-weight: 600;
+            letter-spacing: .5px;
+        }
+
+        /* ========================================
+           游戏页
+        ======================================== */
+
+        /* --- 顶栏 --- */
+        .header {
+            display: flex;
             align-items: center;
-            gap: 4px;
-            background: var(--accent-lt);
-            color: var(--accent-dk);
-            font-size: 11px;
-            font-weight: bold;
-            padding: 2px 10px;
-            border-radius: 10px;
-            margin-left: 6px;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(255,255,255,.7);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
         .back-btn {
-            float: right;
-            font-size: 11px;
-            color: var(--text-s);
-            background: none;
-            border: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(124,58,237,.08);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text-dim);
+            font-size: 12px;
+            padding: 5px 12px;
             cursor: pointer;
-            padding: 0;
-            margin-top: 1px;
+            transition: color .15s, border-color .15s, background .15s;
         }
-        .back-btn:hover { color: var(--accent-dk); }
+        .back-btn:hover {
+            color: var(--purple);
+            border-color: var(--purple);
+            background: rgba(124,58,237,.14);
+        }
 
-        /* 加载动画 */
+        .theme-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(124,58,237,.14), rgba(236,72,153,.14));
+            border: 1px solid rgba(124,58,237,.3);
+            color: var(--purple);
+            letter-spacing: .5px;
+        }
+
+        .guess-count-pill {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+        .guess-count-pill span {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        /* --- 输入区 --- */
+        .input-row {
+            display: flex;
+            gap: 10px;
+            padding: 14px 16px;
+            align-items: center;
+        }
+        .guess-input {
+            flex: 1;
+            height: 46px;
+            padding: 0 18px;
+            background: rgba(255,255,255,.85);
+            border: 1.5px solid var(--border);
+            border-radius: 23px;
+            color: var(--text);
+            font-size: 16px;
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+            box-shadow: 0 2px 8px rgba(124,58,237,.06);
+        }
+        .guess-input::placeholder { color: var(--text-dim); }
+        .guess-input:focus {
+            border-color: var(--purple);
+            box-shadow: var(--glow-p), 0 2px 12px rgba(124,58,237,.15);
+        }
+        .guess-input.shake { animation: shake .35s; }
+        @keyframes shake {
+            0%,100%{ transform:translateX(0); }
+            20%    { transform:translateX(-7px); }
+            40%    { transform:translateX(7px); }
+            60%    { transform:translateX(-4px); }
+            80%    { transform:translateX(4px); }
+        }
+        .submit-btn {
+            height: 46px;
+            padding: 0 22px;
+            background: linear-gradient(135deg, var(--purple), var(--pink));
+            color: #fff;
+            border: none;
+            border-radius: 23px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            box-shadow: 0 6px 18px rgba(124,58,237,.35);
+            transition: opacity .15s, transform .1s;
+            letter-spacing: 1px;
+        }
+        .submit-btn:active { opacity:.85; transform:scale(.96); }
+
+        /* --- 歌曲信息卡 --- */
+        .song-section {
+            margin: 0 16px 10px;
+            padding: 14px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            backdrop-filter: blur(8px);
+            position: relative;
+            box-shadow: 0 4px 16px rgba(124,58,237,.06);
+        }
+        .song-section-label {
+            font-size: 10px;
+            color: var(--text-dim);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .hint-btn {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, rgba(245,158,11,.18), rgba(236,72,153,.18));
+            border: 1px solid rgba(245,158,11,.4);
+            border-radius: 14px;
+            color: var(--gold);
+            padding: 6px 14px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: .5px;
+            transition: box-shadow .2s, color .2s;
+        }
+        .hint-btn:hover {
+            box-shadow: 0 0 14px rgba(245,158,11,.35);
+            color: #b45309;
+        }
+        .hint-btn:active { opacity:.8; }
+
+        .song-meta-line {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+            min-height: 26px;
+        }
+        .song-meta-line + .song-meta-line { margin-top: 6px; }
+
+        .meta-label {
+            font-size: 11px;
+            color: var(--text-dim);
+            letter-spacing: .5px;
+            width: 32px;
+            flex-shrink: 0;
+        }
+        .meta-ch {
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            border-radius: 4px;
+            margin: 1px;
+        }
+        .meta-sep {
+            color: var(--text-dim);
+            font-size: 13px;
+            margin: 0 2px;
+        }
+
+        /* --- 进度条 --- */
+        .progress-wrap {
+            padding: 4px 16px 10px;
+        }
+        .progress-bg {
+            height: 4px;
+            background: rgba(124,58,237,.10);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fg {
+            height: 100%;
+            background: linear-gradient(to right, var(--cyan), var(--purple), var(--pink));
+            border-radius: 4px;
+            transition: width .5s ease;
+            box-shadow: 0 0 8px rgba(124,58,237,.5);
+        }
+        .progress-text {
+            font-size: 10px;
+            color: var(--text-dim);
+            text-align: right;
+            margin-top: 4px;
+            letter-spacing: .5px;
+        }
+        .progress-text b { color: var(--purple); font-weight: 700; }
+
+        /* --- 歌词区 --- */
+        .lyrics-area {
+            padding: 4px 16px 50px;
+        }
+        .lyric-line {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 3px;
+            margin: 6px 0;
+            min-height: 30px;
+        }
+        .ch {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            font-size: 14px;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: background .3s, color .3s, box-shadow .3s;
+        }
+        .ch.hidden {
+            background: var(--hidden-bg);
+            border: 1px solid rgba(124,58,237,.18);
+        }
+        .ch.pre {
+            background: transparent;
+            color: var(--pre-color);
+            font-weight: 600;
+        }
+        .ch.revealed {
+            background: linear-gradient(135deg, rgba(124,58,237,.18), rgba(236,72,153,.18));
+            color: var(--purple);
+            font-weight: 800;
+            border: 1px solid rgba(124,58,237,.35);
+            box-shadow: 0 2px 8px rgba(124,58,237,.2);
+            animation: revealPop .25s ease;
+        }
+        @keyframes revealPop {
+            0%  { transform: scale(1.4); opacity:.6; }
+            100%{ transform: scale(1);   opacity:1; }
+        }
+        .ch.space { background: transparent; width: 6px; border: none; }
+
+        /* --- 加载动画 --- */
         .loading-wrap {
             display: none;
             text-align: center;
-            padding: 40px 0;
-            color: var(--text-s);
-            font-size: 14px;
+            padding: 50px 0;
+            color: var(--text-dim);
+            font-size: 13px;
         }
         .loading-dot {
             display: inline-block;
             width: 8px; height: 8px;
-            background: var(--accent);
             border-radius: 50%;
             margin: 0 3px;
             animation: bounce 1s infinite;
         }
-        .loading-dot:nth-child(2) { animation-delay: 0.15s; }
-        .loading-dot:nth-child(3) { animation-delay: 0.30s; }
+        .loading-dot:nth-child(1){ background: var(--cyan);   animation-delay:0s; }
+        .loading-dot:nth-child(2){ background: var(--purple); animation-delay:.15s; }
+        .loading-dot:nth-child(3){ background: var(--pink);   animation-delay:.30s; }
         @keyframes bounce {
-            0%,80%,100% { transform: translateY(0); opacity: .4; }
-            40%          { transform: translateY(-8px); opacity: 1; }
+            0%,80%,100%{ transform:translateY(0);    opacity:.4; }
+            40%         { transform:translateY(-10px); opacity:1; }
         }
 
-        /* 结算弹窗双按钮 */
-        .win-actions { display: flex; gap: 10px; margin-top: 0; }
-        .win-actions .next-btn { flex: 1; font-size: 14px; padding: 11px 0; }
-        .win-actions .back-theme-btn {
-            flex: 1;
-            padding: 11px 0;
-            background: none;
-            border: 2px solid var(--accent);
-            border-radius: 20px;
-            color: var(--accent-dk);
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
+        /* --- 底部提示 --- */
+        .footer-tip {
+            text-align: center;
+            font-size: 10px;
+            color: rgba(107,114,128,.7);
+            padding: 0 16px 24px;
+            letter-spacing: .5px;
         }
+
+        /* ===== Toast ===== */
+        .toast {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 24px;
+            border-radius: 0 0 14px 14px;
+            font-size: 13px;
+            font-weight: 700;
+            z-index: 500;
+            display: none;
+            max-width: 90vw;
+            text-align: center;
+            letter-spacing: .5px;
+            backdrop-filter: blur(12px);
+        }
+        .toast.ok  {
+            background: rgba(255,255,255,.95);
+            color: var(--purple);
+            border: 1px solid rgba(124,58,237,.3);
+            border-top: none;
+            box-shadow: 0 6px 20px rgba(124,58,237,.2);
+        }
+        .toast.err {
+            background: rgba(255,255,255,.95);
+            color: #dc2626;
+            border: 1px solid rgba(220,38,38,.3);
+            border-top: none;
+            box-shadow: 0 6px 20px rgba(220,38,38,.18);
+        }
+        .toast.tip {
+            background: rgba(255,255,255,.95);
+            color: var(--gold);
+            border: 1px solid rgba(245,158,11,.4);
+            border-top: none;
+            box-shadow: 0 6px 20px rgba(245,158,11,.2);
+        }
+
+        /* ===== 胜利弹窗 ===== */
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(244,240,255,.6);
+            backdrop-filter: blur(10px);
+            z-index: 400;
+            align-items: center;
+            justify-content: center;
+        }
+        .overlay.show { display: flex; }
+        .win-box {
+            background: #fff;
+            border: 1px solid rgba(124,58,237,.2);
+            border-radius: 24px;
+            padding: 36px 32px 28px;
+            text-align: center;
+            max-width: 320px;
+            width: 90%;
+            animation: winPop .35s cubic-bezier(.34,1.56,.64,1);
+            box-shadow: 0 20px 60px rgba(124,58,237,.25), 0 0 0 1px rgba(236,72,153,.10);
+            position: relative;
+            overflow: hidden;
+        }
+        .win-box::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at top, rgba(124,58,237,.10) 0%, transparent 60%),
+                radial-gradient(ellipse at bottom, rgba(236,72,153,.06) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        @keyframes winPop {
+            from { transform:scale(.8) translateY(20px); opacity:0; }
+            to   { transform:scale(1) translateY(0);     opacity:1; }
+        }
+        .win-emoji {
+            font-size: 52px;
+            margin-bottom: 10px;
+            display: block;
+            animation: winBounce .6s ease .1s both;
+        }
+        @keyframes winBounce {
+            0%  { transform:scale(0) rotate(-20deg); }
+            70% { transform:scale(1.15) rotate(5deg); }
+            100%{ transform:scale(1) rotate(0); }
+        }
+        .win-title {
+            font-size: 13px;
+            letter-spacing: 3px;
+            color: var(--purple);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            font-weight: 700;
+            position: relative;
+        }
+        .win-song {
+            font-size: 22px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--purple), var(--pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 8px 0 2px;
+            position: relative;
+        }
+        .win-info {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .win-stats {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 22px;
+            background: linear-gradient(135deg, rgba(124,58,237,.08), rgba(236,72,153,.06));
+            border: 1px solid rgba(124,58,237,.15);
+            border-radius: 14px;
+            padding: 16px 0;
+            position: relative;
+        }
+        .win-stat-item { flex: 1; text-align: center; }
+        .win-stat-divider { width: 1px; height: 36px; background: rgba(124,58,237,.18); }
+        .stat-num {
+            font-size: 30px;
+            font-weight: 900;
+            color: var(--purple);
+            line-height: 1.1;
+            text-shadow: 0 2px 12px rgba(124,58,237,.25);
+        }
+        .stat-label { font-size: 10px; color: var(--text-dim); margin-top: 4px; letter-spacing: .5px; }
+
+        .win-actions { display: flex; gap: 10px; position: relative; }
+        .next-btn {
+            flex: 1;
+            padding: 13px 0;
+            background: linear-gradient(135deg, var(--purple), var(--pink));
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(124,58,237,.35);
+            transition: opacity .15s, transform .1s;
+            letter-spacing: .5px;
+        }
+        .next-btn:active { opacity:.85; transform:scale(.97); }
+        .back-theme-btn {
+            flex: 1;
+            padding: 13px 0;
+            background: transparent;
+            border: 1.5px solid rgba(124,58,237,.3);
+            border-radius: 14px;
+            color: var(--purple);
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: border-color .15s, background .15s;
+        }
+        .back-theme-btn:hover { background: rgba(124,58,237,.08); border-color: var(--purple); }
     </style>
 </head>
 <body>
@@ -430,9 +649,17 @@
 <!-- ========== 主题选择页 ========== -->
 <div id="themeScreen">
     <div class="theme-hero">
-        <div class="theme-hero-icon">🎶</div>
-        <div class="theme-hero-title">猜歌词游戏</div>
-        <div class="theme-hero-sub">选择你的专场，开始挑战</div>
+        <div class="hero-logo">
+            <span class="hero-logo-icon">🎵</span>
+        </div>
+        <div class="eq-bars">
+            <div class="eq-bar"></div><div class="eq-bar"></div>
+            <div class="eq-bar"></div><div class="eq-bar"></div>
+            <div class="eq-bar"></div><div class="eq-bar"></div>
+            <div class="eq-bar"></div>
+        </div>
+        <div class="theme-hero-title">猜歌词</div>
+        <div class="theme-hero-sub">MUSIC QUIZ · 选择专场，开始挑战</div>
     </div>
     <div class="theme-grid" id="themeGrid"></div>
 </div>
@@ -440,52 +667,43 @@
 <!-- ========== 游戏页 ========== -->
 <div id="gameScreen">
     <div class="header">
-        <div class="breadcrumb">
-            <button class="back-btn" onclick="goHome()">← 返回</button>
-            游戏主页 → 猜歌词
-            <span class="theme-badge" id="themeBadge"></span>
-        </div>
-        <div class="divider"></div>
+        <button class="back-btn" onclick="goHome()">← 返回</button>
+        <span class="theme-badge" id="themeBadge"></span>
+        <div class="guess-count-pill">×<span id="guessCount">0</span></div>
     </div>
-
-    <div class="guess-count-bar">猜测次数：<span id="guessCount">0</span></div>
 
     <div class="input-row">
         <input id="guessInput" class="guess-input"
-               placeholder="输入汉字/字母/数字揭示歌词…"
+               placeholder="输入字符揭示歌词…"
                autocomplete="off" maxlength="20" />
         <button class="submit-btn" onclick="handleGuess()">猜</button>
     </div>
 
     <div class="song-section">
-        <button class="look-btn" onclick="useHint()">提示 +2次</button>
+        <div class="song-section-label">歌曲信息</div>
+        <button class="hint-btn" onclick="useHint()">💡 提示 +2</button>
         <div class="song-meta-line">
-            <span class="meta-label">歌名：</span>
+            <span class="meta-label">歌名</span>
             <span id="songNameBlocks"></span>
         </div>
         <div class="song-meta-line">
-            <span class="meta-label">歌手：</span>
+            <span class="meta-label">歌手</span>
             <span id="artistBlocks"></span>
         </div>
     </div>
 
     <div class="progress-wrap">
         <div class="progress-bg"><div class="progress-fg" id="progressFg" style="width:0%"></div></div>
-        <div class="progress-text">已揭示 <span id="revCount">0</span>/<span id="totCount">0</span> 字</div>
+        <div class="progress-text">已揭示 <b id="revCount">0</b> / <span id="totCount">0</span></div>
     </div>
 
-    <!-- 加载中 -->
     <div class="loading-wrap" id="loadingWrap">
-        <div>
-            <span class="loading-dot"></span>
-            <span class="loading-dot"></span>
-            <span class="loading-dot"></span>
-        </div>
-        <div style="margin-top:10px;">正在加载歌曲…</div>
+        <div><span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span></div>
+        <div style="margin-top:12px;letter-spacing:1px;">LOADING…</div>
     </div>
 
     <div class="lyrics-area" id="lyricsArea"></div>
-    <div class="footer-tip">输入字符揭示歌词与歌名 — 歌名全部揭示即获胜</div>
+    <div class="footer-tip">GUESS CHARS → REVEAL LYRICS → WIN WHEN SONG NAME IS FULL</div>
 </div>
 
 <!-- 歌曲数据 -->
@@ -497,30 +715,29 @@
 <!-- 胜利弹窗 -->
 <div class="overlay" id="overlay">
     <div class="win-box">
-        <div class="win-emoji">🎉</div>
-        <div class="win-title">猜出来了！</div>
+        <span class="win-emoji">🎉</span>
+        <div class="win-title">SONG GUESSED!</div>
         <div class="win-song" id="wSong"></div>
         <div class="win-info" id="wArtist"></div>
         <div class="win-stats">
             <div class="win-stat-item">
                 <div class="stat-num" id="wCount">0</div>
-                <div class="stat-label">猜测次数</div>
+                <div class="stat-label">GUESSES</div>
             </div>
             <div class="win-stat-divider"></div>
             <div class="win-stat-item">
                 <div class="stat-num" id="wTime">0s</div>
-                <div class="stat-label">用时</div>
+                <div class="stat-label">TIME</div>
             </div>
         </div>
         <div class="win-actions">
-            <button class="back-theme-btn" onclick="goHome()">换个专场</button>
+            <button class="back-theme-btn" onclick="goHome()">换专场</button>
             <button class="next-btn" onclick="nextSong()">再来一首 →</button>
         </div>
     </div>
 </div>
 
 <script>
-
 /* ========== 初始预揭示的高频字 ========== */
 const PRE_REVEAL = new Set(['的', '了', '是', '在', '着', '你', '我', '他']);
 
@@ -544,32 +761,22 @@ let guessedSet     = new Set();
         card.className = 'theme-card';
         card.setAttribute('onclick', `selectTheme('${t.id}')`);
         card.innerHTML = `
-            <div class="theme-card-icon">${t.icon}</div>
+            <span class="theme-card-icon">${t.icon}</span>
             <div class="theme-card-name">${t.name}</div>
             <div class="theme-card-desc">${t.desc}</div>
-            <div class="theme-card-count">${count} 首歌曲</div>
+            <span class="theme-card-count">${count} 首</span>
         `;
         grid.appendChild(card);
     });
 })();
 
-/* ========== 接口层（对接真实接口只需改这一个函数） ========== */
+/* ========== 接口层 ========== */
 async function fetchSong(themeId) {
-    /* --- 接入真实接口时取消下方注释 ---
-    try {
-        const res = await fetch(`/api/songs/random?theme=${themeId}`);
-        if (res.ok) return await res.json(); // 期望返回 { name, artist, lyrics:[] }
-    } catch(e) {}
-    */
-
-    // 本地占位数据兜底
     const pool = THEME_SONGS[themeId] || [];
     if (!usedSongNames[themeId]) usedSongNames[themeId] = new Set();
     const used = usedSongNames[themeId];
-
     let available = pool.filter(s => !used.has(s.name));
-    if (available.length === 0) { used.clear(); available = pool; } // 全出完则重置
-
+    if (available.length === 0) { used.clear(); available = pool; }
     const song = available[Math.floor(Math.random() * available.length)];
     used.add(song.name);
     return song;
@@ -579,11 +786,9 @@ async function fetchSong(themeId) {
 function selectTheme(themeId) {
     currentTheme = themeId;
     const theme  = THEMES.find(t => t.id === themeId);
-
     document.getElementById('themeScreen').style.display = 'none';
     document.getElementById('gameScreen').style.display  = 'block';
     document.getElementById('themeBadge').textContent    = `${theme.icon} ${theme.name}`;
-
     usedSongNames[themeId] = new Set();
     startNewSong();
 }
@@ -595,12 +800,9 @@ function goHome() {
 }
 
 async function startNewSong() {
-    // 显示加载动画
     document.getElementById('loadingWrap').style.display = 'block';
     document.getElementById('lyricsArea').innerHTML = '';
-
     currentSong = await fetchSong(currentTheme);
-
     document.getElementById('loadingWrap').style.display = 'none';
     initGame();
 }
@@ -630,7 +832,6 @@ function initGame() {
 /* ---- 渲染歌名/歌手 ---- */
 function renderSongMeta() {
     const song = currentSong;
-
     songNameStates = [...song.name].map(ch => PRE_REVEAL.has(ch) ? 'pre' : 'hidden');
     const nameEl = document.getElementById('songNameBlocks');
     nameEl.innerHTML = '';
@@ -811,7 +1012,6 @@ function useHint() {
 /* ---- 胜利 ---- */
 function triggerWin() {
     const song = currentSong;
-
     song.lyrics.forEach((line, li) => {
         [...line].forEach((ch, ci) => {
             if (states[li][ci] === 'hidden') {
@@ -839,11 +1039,11 @@ function triggerWin() {
     updateStats();
 
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
-    document.getElementById('wSong').textContent  = song.name;
-    document.getElementById('wArtist').textContent = '歌手：' + song.artist;
-    document.getElementById('wCount').textContent  = guessCount;
-    document.getElementById('wTime').textContent   = elapsed >= 60
-        ? `${Math.floor(elapsed / 60)}分${elapsed % 60}秒` : `${elapsed}秒`;
+    document.getElementById('wSong').textContent    = song.name;
+    document.getElementById('wArtist').textContent  = '演唱：' + song.artist;
+    document.getElementById('wCount').textContent   = guessCount;
+    document.getElementById('wTime').textContent    = elapsed >= 60
+        ? `${Math.floor(elapsed / 60)}m${elapsed % 60}s` : `${elapsed}s`;
     document.getElementById('overlay').classList.add('show');
 }
 
