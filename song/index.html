@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猜歌词游戏</title>
+    <style>
+        /* ===== 小清新配色变量 ===== */
+        :root {
+            --bg-from:    #f0faf5;
+            --bg-mid:     #e6f4fb;
+            --bg-to:      #f5effe;
+            --accent:     #3aaa7e;   /* 薄荷绿（加深） */
+            --accent-dk:  #278060;
+            --accent-lt:  #c2e8d8;
+            --surface:    rgba(255,255,255,0.90);
+            --border:     #a8d8c4;
+            --text-h:     #0f2e22;   /* 极深绿，标题 */
+            --text-b:     #1e4535;   /* 深绿，正文 */
+            --text-s:     #3a6e58;   /* 中深绿，次要 */
+            --text-m:     #5a8c78;   /* 较深，辅助 */
+            --hidden-bg:  #b8d9ee;   /* 天蓝遮块（稍深） */
+            --pre-color:  #1a4a38;   /* 预显字 */
+            --rev-color:  #1a7a52;   /* 命中字 */
+            --shadow:     0 2px 12px rgba(40,120,80,0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: linear-gradient(160deg, var(--bg-from) 0%, var(--bg-mid) 45%, var(--bg-to) 100%);
+            background-attachment: fixed;
+            color: var(--text-b);
+            font-family: 'PingFang SC', 'Microsoft YaHei', '微软雅黑', sans-serif;
+            min-height: 100vh;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* ---- 顶部标题 ---- */
+        .header {
+            background: var(--surface);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 14px 0;
+            box-shadow: var(--shadow);
+        }
+        .breadcrumb {
+            font-size: 11px;
+            color: var(--text-m);
+            letter-spacing: 0.5px;
+        }
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 8px 0 0;
+        }
+
+        /* ---- 猜测次数 ---- */
+        .guess-count-bar {
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-s);
+            padding: 7px 0;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255,255,255,0.5);
+        }
+        .guess-count-bar span {
+            color: var(--accent-dk);
+            font-weight: bold;
+        }
+
+        /* ---- 输入区 ---- */
+        .input-row {
+            display: flex;
+            gap: 8px;
+            padding: 12px 14px;
+            align-items: center;
+            background: rgba(255,255,255,0.4);
+        }
+        .guess-input {
+            flex: 1;
+            height: 40px;
+            padding: 0 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 20px;
+            background: #fff;
+            color: var(--text-h);
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 1px 4px rgba(80,160,120,0.08);
+        }
+        .guess-input::placeholder { color: var(--text-m); }
+        .guess-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(109,191,158,0.18);
+        }
+        .guess-input.shake { animation: shake 0.35s; }
+        @keyframes shake {
+            0%,100% { transform: translateX(0); }
+            20%      { transform: translateX(-7px); }
+            40%      { transform: translateX(7px); }
+            60%      { transform: translateX(-4px); }
+            80%      { transform: translateX(4px); }
+        }
+        .submit-btn {
+            height: 40px;
+            padding: 0 18px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dk));
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(77,168,128,0.3);
+            transition: opacity 0.15s;
+        }
+        .submit-btn:active { opacity: 0.85; }
+
+        /* ---- 歌曲信息 ---- */
+        .song-section {
+            padding: 8px 14px 10px;
+            position: relative;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+        }
+        .look-btn {
+            position: absolute;
+            right: 14px;
+            top: 10px;
+            background: linear-gradient(135deg, #a8d8c0, var(--accent));
+            border: none;
+            border-radius: 14px;
+            color: #fff;
+            padding: 5px 13px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            box-shadow: 0 1px 6px rgba(109,191,158,0.3);
+        }
+        .look-btn:active { opacity: 0.8; }
+        .song-meta-line {
+            font-size: 13px;
+            color: var(--text-b);
+            line-height: 2.2;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .meta-label { color: var(--text-s); font-size: 12px; }
+
+        /* 歌名/歌手区字符块 */
+        .meta-ch {
+            width: 18px;
+            height: 18px;
+            font-size: 13px;
+            vertical-align: middle;
+            margin: 1px;
+            border-radius: 3px;
+        }
+        .meta-sep {
+            color: var(--text-m);
+            font-size: 13px;
+            vertical-align: middle;
+            margin: 0 2px;
+        }
+
+        /* ---- 进度条 ---- */
+        .progress-wrap {
+            padding: 6px 14px 2px;
+            background: rgba(255,255,255,0.3);
+        }
+        .progress-bg {
+            height: 4px;
+            background: var(--accent-lt);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fg {
+            height: 100%;
+            background: linear-gradient(to right, #a8e6c8, var(--accent));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        .progress-text {
+            font-size: 11px;
+            color: var(--text-s);
+            text-align: right;
+            padding: 2px 0 4px;
+        }
+
+        /* ---- 歌词展示区 ---- */
+        .lyrics-area {
+            padding: 8px 14px 36px;
+        }
+        .lyric-line {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 3px;
+            margin: 5px 0;
+            min-height: 28px;
+        }
+        .ch {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 23px;
+            height: 23px;
+            font-size: 14px;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background 0.3s, color 0.3s;
+        }
+        .ch.hidden   { background: var(--hidden-bg); }
+        .ch.pre      { background: transparent; color: var(--pre-color); font-weight: 600; }
+        .ch.revealed { background: var(--accent-lt); color: var(--rev-color); font-weight: 800; }
+        .ch.space    { background: transparent; width: 6px; }
+
+        /* ---- 消息提示条 ---- */
+        .toast {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 9px 22px;
+            border-radius: 0 0 12px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            z-index: 500;
+            display: none;
+            max-width: 88vw;
+            text-align: center;
+            white-space: normal;
+            word-break: break-all;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+        }
+        .toast.ok  { background: #b7ecd4; color: #2a7a55; }
+        .toast.err { background: #fddcdc; color: #c05050; }
+        .toast.tip { background: #d4e8fb; color: #3a70b0; }
+
+        /* ---- 胜利弹窗 ---- */
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(200,235,220,0.55);
+            backdrop-filter: blur(6px);
+            z-index: 400;
+            align-items: center;
+            justify-content: center;
+        }
+        .overlay.show { display: flex; }
+        .win-box {
+            background: #fff;
+            border: 2px solid var(--accent-lt);
+            border-radius: 20px;
+            padding: 32px 36px 28px;
+            text-align: center;
+            max-width: 310px;
+            width: 88%;
+            animation: popIn 0.3s;
+            box-shadow: 0 8px 32px rgba(80,160,120,0.18);
+        }
+        @keyframes popIn {
+            from { transform: scale(0.82); opacity: 0; }
+            to   { transform: scale(1);   opacity: 1; }
+        }
+        .win-emoji { font-size: 46px; margin-bottom: 10px; }
+        .win-title { font-size: 22px; color: var(--accent-dk); font-weight: bold; margin-bottom: 4px; }
+        .win-song  { font-size: 19px; color: var(--text-h); font-weight: bold; margin: 8px 0 2px; }
+        .win-info  { font-size: 13px; color: var(--text-s); margin: 4px 0; }        .win-stats {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 18px 0 22px;
+            background: var(--accent-lt);
+            border-radius: 12px;
+            padding: 14px 0;
+        }
+        .win-stat-item { flex: 1; text-align: center; }
+        .win-stat-divider { width: 1px; height: 36px; background: #b7e0cc; }
+        .stat-num   { font-size: 28px; font-weight: bold; color: var(--accent-dk); line-height: 1.2; }
+        .stat-label { font-size: 11px; color: var(--text-s); margin-top: 4px; }
+        .next-btn {
+            padding: 11px 34px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dk));
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(77,168,128,0.3);
+            transition: opacity 0.15s;
+        }
+        .next-btn:active { opacity: 0.85; }
+
+        /* ---- 底部信息 ---- */
+        .footer-tip {
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-m);
+            padding: 0 14px 20px;
+        }
+
+        /* ======== 主题选择页 ======== */
+        #themeScreen {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 0 0 30px;
+        }
+        #gameScreen { display: none; }
+
+        .theme-hero {
+            text-align: center;
+            padding: 40px 20px 24px;
+        }
+        .theme-hero-icon { font-size: 52px; margin-bottom: 10px; }
+        .theme-hero-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-h);
+            margin-bottom: 6px;
+        }
+        .theme-hero-sub {
+            font-size: 13px;
+            color: var(--text-s);
+        }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            padding: 0 16px;
+        }
+        .theme-card {
+            background: rgba(255,255,255,0.88);
+            border-radius: 16px;
+            padding: 20px 14px 18px;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            box-shadow: 0 3px 12px rgba(60,120,80,0.10);
+            transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+        }
+        .theme-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(60,120,80,0.18);
+            border-color: var(--accent);
+        }
+        .theme-card:active { transform: scale(0.97); }
+        .theme-card-icon  { font-size: 36px; margin-bottom: 8px; }
+        .theme-card-name  { font-size: 15px; font-weight: bold; color: var(--text-h); margin-bottom: 4px; }
+        .theme-card-desc  { font-size: 11px; color: var(--text-s); }
+        .theme-card-count { font-size: 10px; color: var(--text-m); margin-top: 6px; }
+
+        /* 游戏页主题标签 */
+        .theme-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--accent-lt);
+            color: var(--accent-dk);
+            font-size: 11px;
+            font-weight: bold;
+            padding: 2px 10px;
+            border-radius: 10px;
+            margin-left: 6px;
+        }
+        .back-btn {
+            float: right;
+            font-size: 11px;
+            color: var(--text-s);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            margin-top: 1px;
+        }
+        .back-btn:hover { color: var(--accent-dk); }
+
+        /* 加载动画 */
+        .loading-wrap {
+            display: none;
+            text-align: center;
+            padding: 40px 0;
+            color: var(--text-s);
+            font-size: 14px;
+        }
+        .loading-dot {
+            display: inline-block;
+            width: 8px; height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            margin: 0 3px;
+            animation: bounce 1s infinite;
+        }
+        .loading-dot:nth-child(2) { animation-delay: 0.15s; }
+        .loading-dot:nth-child(3) { animation-delay: 0.30s; }
+        @keyframes bounce {
+            0%,80%,100% { transform: translateY(0); opacity: .4; }
+            40%          { transform: translateY(-8px); opacity: 1; }
+        }
+
+        /* 结算弹窗双按钮 */
+        .win-actions { display: flex; gap: 10px; margin-top: 0; }
+        .win-actions .next-btn { flex: 1; font-size: 14px; padding: 11px 0; }
+        .win-actions .back-theme-btn {
+            flex: 1;
+            padding: 11px 0;
+            background: none;
+            border: 2px solid var(--accent);
+            border-radius: 20px;
+            color: var(--accent-dk);
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ========== 主题选择页 ========== -->
+<div id="themeScreen">
+    <div class="theme-hero">
+        <div class="theme-hero-icon">🎶</div>
+        <div class="theme-hero-title">猜歌词游戏</div>
+        <div class="theme-hero-sub">选择你的专场，开始挑战</div>
+    </div>
+    <div class="theme-grid">
+        <div class="theme-card" onclick="selectTheme('jay')">
+            <div class="theme-card-icon">🎵</div>
+            <div class="theme-card-name">周杰伦专场</div>
+            <div class="theme-card-desc">华语天王·经典金曲</div>
+        </div>
+        <div class="theme-card" onclick="selectTheme('80s')">
+            <div class="theme-card-icon">🎸</div>
+            <div class="theme-card-name">80后专场</div>
+            <div class="theme-card-desc">经典老歌·回忆杀</div>
+        </div>
+        <div class="theme-card" onclick="selectTheme('90s')">
+            <div class="theme-card-icon">🌟</div>
+            <div class="theme-card-name">90后专场</div>
+            <div class="theme-card-desc">青春旋律·时代之声</div>
+        </div>
+        <div class="theme-card" onclick="selectTheme('love')">
+            <div class="theme-card-icon">💕</div>
+            <div class="theme-card-name">情歌对唱</div>
+            <div class="theme-card-desc">甜蜜对唱·爱情金曲</div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== 游戏页 ========== -->
+<div id="gameScreen">
+    <div class="header">
+        <div class="breadcrumb">
+            <button class="back-btn" onclick="goHome()">← 返回</button>
+            游戏主页 → 猜歌词
+            <span class="theme-badge" id="themeBadge"></span>
+        </div>
+        <div class="divider"></div>
+    </div>
+
+    <div class="guess-count-bar">猜测次数：<span id="guessCount">0</span></div>
+
+    <div class="input-row">
+        <input id="guessInput" class="guess-input"
+               placeholder="输入汉字/字母/数字揭示歌词…"
+               autocomplete="off" maxlength="20" />
+        <button class="submit-btn" onclick="handleGuess()">猜</button>
+    </div>
+
+    <div class="song-section">
+        <button class="look-btn" onclick="useHint()">提示 +2次</button>
+        <div class="song-meta-line">
+            <span class="meta-label">歌名：</span>
+            <span id="songNameBlocks"></span>
+        </div>
+        <div class="song-meta-line">
+            <span class="meta-label">歌手：</span>
+            <span id="artistBlocks"></span>
+        </div>
+    </div>
+
+    <div class="progress-wrap">
+        <div class="progress-bg"><div class="progress-fg" id="progressFg" style="width:0%"></div></div>
+        <div class="progress-text">已揭示 <span id="revCount">0</span>/<span id="totCount">0</span> 字</div>
+    </div>
+
+    <!-- 加载中 -->
+    <div class="loading-wrap" id="loadingWrap">
+        <div>
+            <span class="loading-dot"></span>
+            <span class="loading-dot"></span>
+            <span class="loading-dot"></span>
+        </div>
+        <div style="margin-top:10px;">正在加载歌曲…</div>
+    </div>
+
+    <div class="lyrics-area" id="lyricsArea"></div>
+    <div class="footer-tip">输入字符揭示歌词与歌名 — 歌名全部揭示即获胜</div>
+</div>
+
+<!-- 提示条 -->
+<div class="toast" id="toast"></div>
+
+<!-- 胜利弹窗 -->
+<div class="overlay" id="overlay">
+    <div class="win-box">
+        <div class="win-emoji">🎉</div>
+        <div class="win-title">猜出来了！</div>
+        <div class="win-song" id="wSong"></div>
+        <div class="win-info" id="wArtist"></div>
+        <div class="win-stats">
+            <div class="win-stat-item">
+                <div class="stat-num" id="wCount">0</div>
+                <div class="stat-label">猜测次数</div>
+            </div>
+            <div class="win-stat-divider"></div>
+            <div class="win-stat-item">
+                <div class="stat-num" id="wTime">0s</div>
+                <div class="stat-label">用时</div>
+            </div>
+        </div>
+        <div class="win-actions">
+            <button class="back-theme-btn" onclick="goHome()">换个专场</button>
+            <button class="next-btn" onclick="nextSong()">再来一首 →</button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ========== 专场配置 ========== */
+const THEMES = [
+    { id: 'jay',  name: '周杰伦专场', icon: '🎵' },
+    { id: '80s',  name: '80后专场',   icon: '🎸' },
+    { id: '90s',  name: '90后专场',   icon: '🌟' },
+    { id: 'love', name: '情歌对唱',   icon: '💕' },
+];
+
+/* ========== 本地占位歌曲（对接接口后可删除） ========== */
+const THEME_SONGS = {
+    jay: [
+        { name: "示例歌曲A", artist: "周杰伦", lyrics: ["这里放真实歌词第一行", "第二行歌词内容", "第三行歌词内容", "第四行歌词内容"] },
+        { name: "示例歌曲B", artist: "周杰伦", lyrics: ["这里放真实歌词第一行", "第二行歌词内容", "第三行歌词内容", "第四行歌词内容"] },
+    ],
+    '80s': [
+        { name: "示例歌曲C", artist: "邓丽君", lyrics: ["这里放真实歌词第一行", "第二行歌词内容", "第三行歌词内容", "第四行歌词内容"] },
+        { name: "示例歌曲D", artist: "张国荣", lyrics: ["这里放真实歌词第一行", "第二行歌词内容", "第三行歌词内容", "第四行歌词内容"] },
+    ],
+    '90s': [
+        { name: "示例歌曲E", artist: "王菲",   lyrics: ["这里放真实歌词第一行", "第二行歌词内容", "第三行歌词内容", "第四行歌词内容"] },
+        { name: "示例歌曲F", artist: "刘德华", lyrics: ["这里放真实歌词第一行", "第二行歌词内容", "第三行歌词内容", "第四行歌词内容"] },
+    ],
+    love: [
+        { name: "示例歌曲G", artist: "男歌手 / 女歌手", lyrics: ["这里放真实歌词第一行", "第二行歌词内容", "第三行歌词内容", "第四行歌词内容"] },
+        { name: "示例歌曲H", artist: "对唱组合",         lyrics: ["这里放真实歌词第一行", "第二行歌词内容", "第三行歌词内容", "第四行歌词内容"] },
+    ],
+};
+
+/* ========== 初始预揭示的高频字 ========== */
+const PRE_REVEAL = new Set(['的', '了', '是', '在', '着']);
+
+/* ========== 游戏状态 ========== */
+let currentTheme   = null;   // 当前专场 id
+let currentSong    = null;   // 当前歌曲对象
+let usedSongNames  = {};     // 记录各专场已出现歌曲，避免重复
+let guessCount     = 0;
+let startTime      = 0;
+let states         = [];
+let songNameStates = [];
+let artistStates   = [];
+let guessedSet     = new Set();
+
+/* ========== 接口层（对接真实接口只需改这一个函数） ========== */
+async function fetchSong(themeId) {
+    /* --- 接入真实接口时取消下方注释 ---
+    try {
+        const res = await fetch(`/api/songs/random?theme=${themeId}`);
+        if (res.ok) return await res.json(); // 期望返回 { name, artist, lyrics:[] }
+    } catch(e) {}
+    */
+
+    // 本地占位数据兜底
+    const pool = THEME_SONGS[themeId] || [];
+    if (!usedSongNames[themeId]) usedSongNames[themeId] = new Set();
+    const used = usedSongNames[themeId];
+
+    let available = pool.filter(s => !used.has(s.name));
+    if (available.length === 0) { used.clear(); available = pool; } // 全出完则重置
+
+    const song = available[Math.floor(Math.random() * available.length)];
+    used.add(song.name);
+    return song;
+}
+
+/* ========== 主题选择 ========== */
+function selectTheme(themeId) {
+    currentTheme = themeId;
+    const theme  = THEMES.find(t => t.id === themeId);
+
+    document.getElementById('themeScreen').style.display = 'none';
+    document.getElementById('gameScreen').style.display  = 'block';
+    document.getElementById('themeBadge').textContent    = `${theme.icon} ${theme.name}`;
+
+    usedSongNames[themeId] = new Set();
+    startNewSong();
+}
+
+function goHome() {
+    document.getElementById('overlay').classList.remove('show');
+    document.getElementById('gameScreen').style.display  = 'none';
+    document.getElementById('themeScreen').style.display = 'flex';
+}
+
+async function startNewSong() {
+    // 显示加载动画
+    document.getElementById('loadingWrap').style.display = 'block';
+    document.getElementById('lyricsArea').innerHTML = '';
+
+    currentSong = await fetchSong(currentTheme);
+
+    document.getElementById('loadingWrap').style.display = 'none';
+    initGame();
+}
+
+/* ========== 初始化 ========== */
+function initGame() {
+    const song = currentSong;
+    guessCount = 0;
+    startTime  = Date.now();
+    guessedSet = new Set();
+    states     = [];
+
+    song.lyrics.forEach((line, li) => {
+        states[li] = [...line].map(ch => PRE_REVEAL.has(ch) ? 'pre' : 'hidden');
+        [...line].forEach(ch => { if (PRE_REVEAL.has(ch)) guessedSet.add(ch); });
+    });
+
+    renderSongMeta();
+    renderLyrics();
+    updateStats();
+    document.getElementById('guessCount').textContent = 0;
+    const inp = document.getElementById('guessInput');
+    inp.value = '';
+    inp.focus();
+}
+
+/* ---- 渲染歌名/歌手 ---- */
+function renderSongMeta() {
+    const song = currentSong;
+
+    songNameStates = [...song.name].map(ch => PRE_REVEAL.has(ch) ? 'pre' : 'hidden');
+    const nameEl = document.getElementById('songNameBlocks');
+    nameEl.innerHTML = '';
+    [...song.name].forEach((ch, i) => {
+        const sp = document.createElement('span');
+        sp.id = `sn_${i}`;
+        sp.className = songNameStates[i] === 'pre' ? 'ch pre meta-ch' : 'ch hidden meta-ch';
+        if (songNameStates[i] === 'pre') sp.textContent = ch;
+        nameEl.appendChild(sp);
+    });
+
+    artistStates = [...song.artist].map(ch =>
+        (ch === '/' || ch === ' ') ? 'sep' : (PRE_REVEAL.has(ch) ? 'pre' : 'hidden')
+    );
+    const artEl = document.getElementById('artistBlocks');
+    artEl.innerHTML = '';
+    [...song.artist].forEach((ch, i) => {
+        const sp = document.createElement('span');
+        sp.id = `sa_${i}`;
+        if (artistStates[i] === 'sep') {
+            sp.className = 'meta-sep'; sp.textContent = ch;
+        } else if (artistStates[i] === 'pre') {
+            sp.className = 'ch pre meta-ch'; sp.textContent = ch;
+        } else {
+            sp.className = 'ch hidden meta-ch';
+        }
+        artEl.appendChild(sp);
+    });
+}
+
+/* ---- 渲染歌词 ---- */
+function renderLyrics() {
+    const song = currentSong;
+    const area = document.getElementById('lyricsArea');
+    area.innerHTML = '';
+    song.lyrics.forEach((line, li) => {
+        const row = document.createElement('div');
+        row.className = 'lyric-line';
+        [...line].forEach((ch, ci) => {
+            const sp = document.createElement('span');
+            sp.id = `c${li}_${ci}`;
+            sp.className = `ch ${states[li][ci]}`;
+            if (states[li][ci] !== 'hidden') sp.textContent = ch;
+            row.appendChild(sp);
+        });
+        area.appendChild(row);
+    });
+}
+
+/* ---- 更新进度 ---- */
+function updateStats() {
+    const song = currentSong;
+    let total = 0, revealed = 0;
+    song.lyrics.forEach((line, li) => {
+        [...line].forEach((_, ci) => {
+            total++;
+            if (states[li][ci] !== 'hidden') revealed++;
+        });
+    });
+    document.getElementById('totCount').textContent = total;
+    document.getElementById('revCount').textContent = revealed;
+    document.getElementById('progressFg').style.width = (revealed / total * 100).toFixed(1) + '%';
+}
+
+/* ========== 处理猜测 ========== */
+function handleGuess() {
+    const inp = document.getElementById('guessInput');
+    const val = inp.value.trim();
+    if (!val) return;
+
+    guessCount++;
+    document.getElementById('guessCount').textContent = guessCount;
+
+    const chars = [...val].filter(c => /[一-龥a-zA-Z0-9]/.test(c));
+    if (chars.length > 0) {
+        const unique = [...new Set(chars)];
+        const hitChars = [], missChars = [], skipChars = [];
+
+        unique.forEach(ch => {
+            if (guessedSet.has(ch)) { skipChars.push(ch); return; }
+            const result = revealChar(ch, true);
+            if (result === 'hit')  hitChars.push(ch);
+            if (result === 'miss') missChars.push(ch);
+        });
+
+        updateStats();
+
+        if (hitChars.length > 0 && missChars.length === 0) {
+            showToast(`命中：${hitChars.map(c => `"${c}"`).join(' ')} ✓`, 'ok');
+        } else if (hitChars.length > 0) {
+            showToast(`命中 ${hitChars.join('')}，未找到 ${missChars.join('')}`, 'tip');
+        } else if (skipChars.length === unique.length) {
+            showToast('这些字都猜过了', 'tip');
+        } else {
+            showToast(`歌词中没有 "${missChars.join('')}"`, 'err');
+        }
+
+        inp.value = '';
+        checkSongNameRevealed();
+        return;
+    }
+
+    inp.classList.add('shake');
+    setTimeout(() => inp.classList.remove('shake'), 400);
+    showToast('请输入有效字符', 'err');
+    inp.value = '';
+}
+
+/* ---- 检查歌名是否全部揭示 ---- */
+function checkSongNameRevealed() {
+    if (songNameStates.every(s => s !== 'hidden')) triggerWin();
+}
+
+/* ---- 揭示字符 ---- */
+function revealChar(ch, silent = false) {
+    if (guessedSet.has(ch)) {
+        if (!silent) showToast(`"${ch}" 已经猜过了`, 'tip');
+        return 'skip';
+    }
+    guessedSet.add(ch);
+
+    const song = currentSong;
+    let found = false;
+
+    song.lyrics.forEach((line, li) => {
+        [...line].forEach((c, ci) => {
+            if (c === ch && states[li][ci] === 'hidden') {
+                states[li][ci] = 'revealed'; found = true;
+                const el = document.getElementById(`c${li}_${ci}`);
+                if (el) { el.className = 'ch revealed'; el.textContent = ch; }
+            }
+        });
+    });
+    [...song.name].forEach((c, i) => {
+        if (c === ch && songNameStates[i] === 'hidden') {
+            songNameStates[i] = 'revealed'; found = true;
+            const el = document.getElementById(`sn_${i}`);
+            if (el) { el.className = 'ch revealed meta-ch'; el.textContent = ch; }
+        }
+    });
+    [...song.artist].forEach((c, i) => {
+        if (c === ch && artistStates[i] === 'hidden') {
+            artistStates[i] = 'revealed'; found = true;
+            const el = document.getElementById(`sa_${i}`);
+            if (el) { el.className = 'ch revealed meta-ch'; el.textContent = ch; }
+        }
+    });
+
+    if (!silent) {
+        updateStats();
+        showToast(found ? `找到了 "${ch}"！` : `歌词中没有 "${ch}"`, found ? 'ok' : 'err');
+    }
+    return found ? 'hit' : 'miss';
+}
+
+/* ---- 提示按钮 ---- */
+function useHint() {
+    const song = currentSong;
+    const pool = [];
+    song.lyrics.forEach((line, li) => {
+        [...line].forEach((ch, ci) => {
+            if (states[li][ci] === 'hidden' && !guessedSet.has(ch)) pool.push(ch);
+        });
+    });
+    [...song.name].forEach((ch, i)   => { if (songNameStates[i] === 'hidden' && !guessedSet.has(ch)) pool.push(ch); });
+    [...song.artist].forEach((ch, i) => { if (artistStates[i]   === 'hidden' && !guessedSet.has(ch)) pool.push(ch); });
+
+    if (pool.length === 0) { showToast('所有字都已揭示！', 'tip'); return; }
+
+    guessCount += 2;
+    document.getElementById('guessCount').textContent = guessCount;
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    revealChar(pick);
+    showToast(`提示：揭示了"${pick}"（+2次猜测）`, 'tip');
+    checkSongNameRevealed();
+}
+
+/* ---- 胜利 ---- */
+function triggerWin() {
+    const song = currentSong;
+
+    song.lyrics.forEach((line, li) => {
+        [...line].forEach((ch, ci) => {
+            if (states[li][ci] === 'hidden') {
+                states[li][ci] = 'revealed';
+                const el = document.getElementById(`c${li}_${ci}`);
+                if (el) { el.className = 'ch revealed'; el.textContent = ch; }
+            }
+        });
+    });
+    [...song.name].forEach((ch, i) => {
+        if (songNameStates[i] === 'hidden') {
+            songNameStates[i] = 'revealed';
+            const el = document.getElementById(`sn_${i}`);
+            if (el) { el.className = 'ch revealed meta-ch'; el.textContent = ch; }
+        }
+    });
+    [...song.artist].forEach((ch, i) => {
+        if (artistStates[i] === 'hidden') {
+            artistStates[i] = 'revealed';
+            const el = document.getElementById(`sa_${i}`);
+            if (el) { el.className = 'ch revealed meta-ch'; el.textContent = ch; }
+        }
+    });
+
+    updateStats();
+
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    document.getElementById('wSong').textContent  = song.name;
+    document.getElementById('wArtist').textContent = '歌手：' + song.artist;
+    document.getElementById('wCount').textContent  = guessCount;
+    document.getElementById('wTime').textContent   = elapsed >= 60
+        ? `${Math.floor(elapsed / 60)}分${elapsed % 60}秒` : `${elapsed}秒`;
+    document.getElementById('overlay').classList.add('show');
+}
+
+/* ---- 下一首 ---- */
+function nextSong() {
+    document.getElementById('overlay').classList.remove('show');
+    startNewSong();
+}
+
+/* ---- Toast ---- */
+let _toastTimer = null;
+function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type}`;
+    t.style.display = 'block';
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => { t.style.display = 'none'; }, 2000);
+}
+
+document.getElementById('guessInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleGuess();
+});
+</script>
+</body>
+</html>
